@@ -5,11 +5,12 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 11
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -25,3 +26,6 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:23.1.0'
     compile 'jp.wasabeef:recyclerview-animators:2.0.0'
 }
+
+
+apply from :'./upload.gradle'
