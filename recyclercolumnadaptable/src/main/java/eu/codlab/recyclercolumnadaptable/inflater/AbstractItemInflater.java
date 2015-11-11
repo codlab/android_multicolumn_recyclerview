@@ -1,5 +1,6 @@
 package eu.codlab.recyclercolumnadaptable.inflater;
 
+import android.view.View;
 import android.view.ViewGroup;
 
 import eu.codlab.recyclercolumnadaptable.adapter.ColumnItemHolder;
@@ -16,4 +17,10 @@ public interface AbstractItemInflater {
     int getItemCount();
 
     ContentItem getContentItemAt(int position);
+
+    boolean hasHeader();
+
+    View getHeader(ViewGroup parent);
+
+
 }

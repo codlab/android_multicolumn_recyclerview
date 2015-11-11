@@ -12,9 +12,11 @@ import eu.codlab.recyclercolumnadaptable.RecyclerColumnsWithContentView;
 import eu.codlab.recyclercolumnadaptable.adapter.AbstractColumnItemHolder;
 import eu.codlab.recyclercolumnadaptable.adapter.ColumnItemHolder;
 import eu.codlab.recyclercolumnadaptable.adapter.EmptyItemHolder;
+import eu.codlab.recyclercolumnadaptable.adapter.HeaderItemHolder;
 import eu.codlab.recyclercolumnadaptable.inflater.AbstractItemInflater;
 import eu.codlab.recyclercolumnadaptable.item.AbstractItem;
 import eu.codlab.recyclercolumnadaptable.item.EmptyItem;
+import eu.codlab.recyclercolumnadaptable.item.HeaderItem;
 
 /**
  * Created by kevinleperf on 09/11/2015.
@@ -22,6 +24,7 @@ import eu.codlab.recyclercolumnadaptable.item.EmptyItem;
 public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHolder> {
     private final static int ITEM_EMPTY = 0;
     private final static int ITEM_CONTENT = 1;
+    private final static int ITEM_HEADER = 2;
 
     public final static MainArrayAdapter instantiate(AbstractItemInflater provider, RecyclerColumnsWithContentView grid) {
         return new MainArrayAdapter(provider, grid.getColumns(), grid.getColumnsExpandedVisible());
@@ -43,6 +46,7 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
         _column_left = column_left;
 
         _content = new ArrayList<>();
+        if (_provider.hasHeader()) _content.add(new HeaderItem());
         for (int i = 0; i < _provider.getItemCount(); i++) {
             _content.add(_provider.getContentItemAt(i));
         }
@@ -50,6 +54,8 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
     }
 
     public AbstractColumnItemHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        if (viewType == ITEM_HEADER)
+            return new HeaderItemHolder(_provider.getHeader(parent), isExpanded());
         if (viewType == ITEM_CONTENT) {
             return _provider.onCreateViewHolder(parent);
         }
@@ -60,6 +66,8 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
 
     @Override
     public int getItemViewType(int position) {
+        if (_content.get(position) instanceof HeaderItem)
+            return ITEM_HEADER;
         if (_content.get(position) instanceof EmptyItem)
             return ITEM_EMPTY;
         return ITEM_CONTENT;
@@ -67,6 +75,10 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
 
     @Override
     public void onBindViewHolder(AbstractColumnItemHolder holder, int position) {
+        if (holder instanceof HeaderItemHolder) {
+            HeaderItemHolder header = (HeaderItemHolder) holder;
+        }
+
         if (holder instanceof ColumnItemHolder)
             _provider.onBindViewHolder((ColumnItemHolder) holder);
     }
@@ -74,6 +86,10 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
     @Override
     public int getItemCount() {
         return _content.size();
+    }
+
+    public AbstractItem getItemAt(int i) {
+        return _content.get(i);
     }
 
     public void expand() {
@@ -103,6 +119,12 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
         List<AbstractItem> items = new ArrayList<>();
 
         int original_index = 0;
+
+        if (_provider.hasHeader() && _content.size() > 0) {
+            items.add(_content.get(0));
+            original_index++;
+        }
+
         while (has_fetched_item) {
             has_fetched_item = false;
 
@@ -126,12 +148,18 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
         for (Changed change : changed) {
             notifyItemRangeInserted(change.start, change.count);
         }
+
+        if (_provider.hasHeader()) {
+            _content.remove(0);
+            notifyItemRemoved(0);
+        }
     }
 
     private void unsetEmptyContent() {
         ArrayList<Changed> changed = new ArrayList<>();
 
         int i = 0;
+        //if (_provider.hasHeader()) i++;
         Changed change = null;
         while (i < _content.size()) {
             if (_content.get(i) instanceof EmptyItem) {
@@ -150,7 +178,11 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
         if (change != null) changed.add(change);
 
         for (Changed remove : changed) notifyItemRangeRemoved(remove.start, remove.count);
-
+        if (_provider.hasHeader()
+                && (_content.size() == 0 || !(_content.get(0) instanceof HeaderItem))) {
+            _content.add(0, new HeaderItem());
+            notifyItemInserted(0);
+        }
     }
 
     /**

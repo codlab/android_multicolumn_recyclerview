@@ -69,6 +69,16 @@ public class MainActivity extends AppCompatActivity implements AbstractItemInfla
     }
 
     @Override
+    public boolean hasHeader() {
+        return true;
+    }
+
+    @Override
+    public View getHeader(ViewGroup parent) {
+        return LayoutInflater.from(this).inflate(R.layout.sample_blue_view, parent, false);
+    }
+
+    @Override
     public void onHideContent(ViewGroup content) {
         Toast.makeText(this, "Hide content", Toast.LENGTH_SHORT).show();
 

@@ -15,6 +15,8 @@ import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
+import eu.codlab.recyclercolumnadaptable.item.AbstractItem;
+import eu.codlab.recyclercolumnadaptable.item.HeaderItem;
 import eu.codlab.recyclercolumnadaptable.view.MainArrayAdapter;
 import jp.wasabeef.recyclerview.animators.LandingAnimator;
 
@@ -22,7 +24,6 @@ import jp.wasabeef.recyclerview.animators.LandingAnimator;
  * Created by kevinleperf on 09/11/2015.
  */
 public class RecyclerColumnsWithContentView extends FrameLayout {
-    private final static String CURRENTLY_SHOWING_CONTENT = "CURRENTLY_SHOWING_CONTENT";
     private final static int MINIMUM_COLUMNS_COUNT = 3;
     private final static int MINIMUM_COLUMNS_WHILE_BEING_EXPANDED_COUNT = 1;
 
@@ -55,7 +56,14 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
         }
 
         //init the recyclerview with the correct amount of columns
-        _recycler.setLayoutManager(new GridLayoutManager(getContext(), _columns));
+        GridLayoutManager grid_manager = new GridLayoutManager(getContext(), _columns);
+        grid_manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                return position == 0 && hasHeader() ? getColumns() : 1;
+            }
+        });
+        _recycler.setLayoutManager(grid_manager);
         _recycler.setItemAnimator(new LandingAnimator(new OvershootInterpolator(1f)));
     }
 
@@ -143,10 +151,23 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
     public boolean isShowingContent(boolean with_temp) {
         if (with_temp && temporary_to_store_is_showing_content != null)
             return temporary_to_store_is_showing_content;
-        return _recycler.getAdapter() != null && !((MainArrayAdapter) _recycler.getAdapter())
+        return hasValidAdapter() && !((MainArrayAdapter) _recycler.getAdapter())
                 .isExpanded();
     }
 
+    private boolean hasHeader() {
+        if (hasValidAdapter()) {
+            MainArrayAdapter adapter = (MainArrayAdapter) _recycler.getAdapter();
+            AbstractItem item = adapter.getItemAt(0);
+            return item != null && item instanceof HeaderItem;
+        }
+        return false;
+    }
+
+    private boolean hasValidAdapter() {
+        return _recycler != null && _recycler.getAdapter() != null
+                && _recycler.getAdapter() instanceof MainArrayAdapter;
+    }
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      * SAVE / RESTORE INSTANCE
