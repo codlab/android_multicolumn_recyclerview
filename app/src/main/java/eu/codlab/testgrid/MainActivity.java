@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity implements AbstractItemInfla
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        for (int i = 0; i < 12; i++) _items.add(new ContentItem());
+        for (int i = 0; i < 12; i++) _items.add(new ContentItem(i));
 
         setContentView(R.layout.activity_main);
 
@@ -54,8 +54,15 @@ public class MainActivity extends AppCompatActivity implements AbstractItemInfla
     }
 
     @Override
-    public void onBindViewHolder(ColumnItemHolder holder) {
-
+    public void onBindViewHolder(final ColumnItemHolder holder) {
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this,
+                        "Click on " + holder.getItem().getPosition(),
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override

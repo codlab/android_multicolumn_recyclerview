@@ -79,8 +79,10 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
             HeaderItemHolder header = (HeaderItemHolder) holder;
         }
 
-        if (holder instanceof ColumnItemHolder)
+        if (holder instanceof ColumnItemHolder) {
+            holder.onBindViewHolder(_content.get(position));
             _provider.onBindViewHolder((ColumnItemHolder) holder);
+        }
     }
 
     @Override
