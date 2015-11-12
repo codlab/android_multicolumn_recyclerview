@@ -1,6 +1,7 @@
 package eu.codlab.testgrid;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
@@ -13,12 +14,13 @@ import java.util.List;
 
 import eu.codlab.recyclercolumnadaptable.IRecyclerColumnsListener;
 import eu.codlab.recyclercolumnadaptable.RecyclerColumnsWithContentView;
-import eu.codlab.recyclercolumnadaptable.adapter.ColumnItemHolder;
 import eu.codlab.recyclercolumnadaptable.inflater.AbstractItemInflater;
 import eu.codlab.recyclercolumnadaptable.item.ContentItem;
 import eu.codlab.recyclercolumnadaptable.view.MainArrayAdapter;
 
-public class MainActivity extends AppCompatActivity implements AbstractItemInflater, IRecyclerColumnsListener {
+public class MainActivity extends AppCompatActivity
+        implements AbstractItemInflater<ColumnsNewItemHolder>,
+        IRecyclerColumnsListener {
 
     private List<ContentItem> _items = new ArrayList<>();
     private RecyclerColumnsWithContentView _grid;
@@ -44,17 +46,17 @@ public class MainActivity extends AppCompatActivity implements AbstractItemInfla
         _grid = (RecyclerColumnsWithContentView) findViewById(R.id.grid);
 
         _grid.setRecyclerColumnsListener(this);
-        _grid.setRecyclerAdapter(MainArrayAdapter.instantiate(this, _grid));
+        _grid.setRecyclerAdapter(this);
     }
 
     @Override
-    public ColumnItemHolder onCreateViewHolder(ViewGroup parent) {
-        return new ColumnItemHolder(LayoutInflater.from(parent.getContext())
+    public ColumnsNewItemHolder onCreateViewHolder(ViewGroup parent) {
+        return new ColumnsNewItemHolder(LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.test_content, parent, false));
     }
 
     @Override
-    public void onBindViewHolder(final ColumnItemHolder holder) {
+    public void onBindViewHolder(final ColumnsNewItemHolder holder) {
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -82,6 +84,17 @@ public class MainActivity extends AppCompatActivity implements AbstractItemInfla
 
     @Override
     public View getHeader(ViewGroup parent) {
+        return LayoutInflater.from(this).inflate(R.layout.sample_blue_view, parent, false);
+    }
+
+    @Override
+    public boolean hasFooter() {
+        return true;
+    }
+
+    @NonNull
+    @Override
+    public View getFooter(@NonNull ViewGroup parent) {
         return LayoutInflater.from(this).inflate(R.layout.sample_blue_view, parent, false);
     }
 

@@ -10,7 +10,7 @@ import eu.codlab.recyclercolumnadaptable.item.ContentItem;
 /**
  * Created by kevinleperf on 09/11/2015.
  */
-public interface AbstractItemInflater {
+public interface AbstractItemInflater<T extends ColumnItemHolder> {
     /**
      * Called from the array adapter with the ColumnItemHolder to create
      *
@@ -18,7 +18,7 @@ public interface AbstractItemInflater {
      * @return an instance of ColumnItemHolder with the proper data default data binded
      */
     @NonNull
-    ColumnItemHolder onCreateViewHolder(@NonNull ViewGroup parent);
+    T onCreateViewHolder(@NonNull ViewGroup parent);
 
     /**
      * Set the data for a displayed / managed holder containing an AbstractItem
@@ -31,7 +31,7 @@ public interface AbstractItemInflater {
      *
      * @param holder the holder to manage
      */
-    void onBindViewHolder(@NonNull ColumnItemHolder holder);
+    void onBindViewHolder(@NonNull T holder);
 
     /**
      * The number of items
@@ -67,4 +67,20 @@ public interface AbstractItemInflater {
      */
     @NonNull
     View getHeader(@NonNull ViewGroup parent);
+
+    /**
+     * Set the provider with a specific footer in the column
+     *
+     * @return true if the provider will manage the creation of a footer view
+     */
+    boolean hasFooter();
+
+    /**
+     * Create the header view requested by the main component
+     *
+     * @param parent a non-null parent
+     * @return
+     */
+    @NonNull
+    View getFooter(@NonNull ViewGroup parent);
 }

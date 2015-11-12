@@ -1,5 +1,6 @@
 package eu.codlab.recyclercolumnadaptable;
 
+import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -9,12 +10,17 @@ import android.os.Parcelable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import eu.codlab.recyclercolumnadaptable.inflater.AbstractItemInflater;
 import eu.codlab.recyclercolumnadaptable.item.AbstractItem;
 import eu.codlab.recyclercolumnadaptable.item.HeaderItem;
 import eu.codlab.recyclercolumnadaptable.view.MainArrayAdapter;
@@ -33,6 +39,15 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
     private ViewGroup _left;
     private ViewGroup _content;
     private IRecyclerColumnsListener _listener;
+    private List<RecyclerView.ItemDecoration> _tmp_decorations = new ArrayList<>();
+
+    /* * * * * * * * * * * *
+     *
+     * * * * * * * * * * * */
+    private LinearLayout _footer_parent;
+    private LinearLayout _footer;
+    private LinearLayout _footer_content;
+
 
     private void init(AttributeSet attrs) {
 
@@ -42,6 +57,10 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
         _recycler = (RecyclerView) findViewById(R.id.recycler);
         _left = (ViewGroup) findViewById(R.id.left);
         _content = (ViewGroup) findViewById(R.id.content);
+
+        _footer = (LinearLayout) findViewById(R.id.footer);
+        _footer_parent = (LinearLayout) findViewById(R.id.footer_parent);
+        _footer_content = (LinearLayout) findViewById(R.id.content_footer);
 
         if (attrs != null) {
             TypedArray array = getContext().obtainStyledAttributes(attrs, R.styleable.RecyclerColumnsWithContentView);
@@ -101,6 +120,11 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
         return _columns;
     }
 
+    public void addItemDecoration(RecyclerView.ItemDecoration decoration) {
+        _tmp_decorations.add(decoration);
+        _recycler.addItemDecoration(decoration);
+    }
+
     /**
      * Show the number of columns that will be visible on left when the content is expanded
      *
@@ -118,8 +142,13 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
         return _columns_left;
     }
 
-    public void setRecyclerAdapter(MainArrayAdapter adapter) {
-        _recycler.setAdapter(adapter);
+    public void setRecyclerAdapter(AbstractItemInflater provider) {
+        _recycler.setAdapter(MainArrayAdapter.instantiate(provider, this));
+        if (provider.hasFooter()) {
+            _footer.removeAllViews();
+            _footer.addView(provider.getFooter(_footer));
+            _footer.requestLayout();
+        }
         checkResume();
     }
 
@@ -132,6 +161,26 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
         if (_recycler.getAdapter() != null) {
             ((MainArrayAdapter) _recycler.getAdapter())
                     .collapse();
+
+            int footer_new_width = _footer_parent.getWidth() * _columns_left / _columns;
+            Log.d("Animation", _footer_parent.getWidth() + " " + footer_new_width);
+            ValueAnimator animator = ValueAnimator.ofFloat(_footer_parent.getWidth(), footer_new_width);
+            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    _footer.getLayoutParams().width = ((Float) animation.getAnimatedValue())
+                            .intValue();
+                    _footer.requestLayout();
+
+                    _footer_content.getLayoutParams().width = _footer_parent.getWidth()
+                            - _footer.getLayoutParams().width;
+                    _footer_content.requestLayout();
+                }
+            });
+            animator.start();
+
+
+            invalidateDecorations();
             if (_listener != null) _listener.onShowContent(_content);
         }
     }
@@ -140,6 +189,23 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
         if (_recycler.getAdapter() != null) {
             ((MainArrayAdapter) _recycler.getAdapter())
                     .expand();
+
+            ValueAnimator animator = ValueAnimator.ofFloat(_footer.getWidth(), _footer_parent.getWidth());
+            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    _footer.getLayoutParams().width = ((Float) animation.getAnimatedValue())
+                            .intValue();
+                    _footer.requestLayout();
+
+                    _footer_content.getLayoutParams().width = _footer_parent.getWidth()
+                            - _footer.getLayoutParams().width;
+                    _footer_content.requestLayout();
+                }
+            });
+            animator.start();
+
+            invalidateDecorations();
             if (_listener != null) _listener.onHideContent(_content);
         }
     }
@@ -238,6 +304,24 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
             }
 
         };
+    }
 
+    private void invalidateDecorations() {
+        try {
+            for (RecyclerView.ItemDecoration decoration : _tmp_decorations) {
+                _recycler.removeItemDecoration(decoration);
+                _recycler.addItemDecoration(decoration);
+            }
+            if (_tmp_decorations.size() > 0) {
+                _recycler.getHandler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        _recycler.postInvalidate();
+                    }
+                }, 300);
+            }
+        } catch (Exception e) {
+
+        }
     }
 }
