@@ -10,7 +10,6 @@ import android.os.Parcelable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
@@ -163,7 +162,6 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
                     .collapse();
 
             int footer_new_width = _footer_parent.getWidth() * _columns_left / _columns;
-            Log.d("Animation", _footer_parent.getWidth() + " " + footer_new_width);
             ValueAnimator animator = ValueAnimator.ofFloat(_footer_parent.getWidth(), footer_new_width);
             animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
@@ -308,20 +306,27 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
 
     private void invalidateDecorations() {
         try {
-            for (RecyclerView.ItemDecoration decoration : _tmp_decorations) {
-                _recycler.removeItemDecoration(decoration);
-                _recycler.addItemDecoration(decoration);
-            }
+            //For now, no other solution to the item decoration issue !
             if (_tmp_decorations.size() > 0) {
-                _recycler.getHandler().postDelayed(new Runnable() {
+                getHandler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        _recycler.postInvalidate();
+                        try {
+                            for (RecyclerView.ItemDecoration decoration : _tmp_decorations) {
+                                _recycler.removeItemDecoration(decoration);
+                                _recycler.addItemDecoration(decoration);
+                            }
+                            _recycler.postInvalidate();
+                        } catch (Exception e) {
+                            if (BuildConfig.DEBUG) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                 }, 300);
             }
         } catch (Exception e) {
-
+            if (BuildConfig.DEBUG) e.printStackTrace();
         }
     }
 }

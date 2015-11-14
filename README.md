@@ -7,7 +7,7 @@ A simple multi column recyclerview supporting column count modification
 Install the dependency into your project using
 ```gradle
 dependencies {
-  compile 'eu.codlab:android_multicolumn_adaptable:1.+'
+  compile 'eu.codlab:android_multicolumn_adaptable:1.6'
 }
 ```
 
@@ -36,6 +36,33 @@ app:columnsVisibleExpanded="integer"
 ```
 Default value : 1
 
+# Usage
+
+- register a listener for events
+```java
+mGrid.setRecyclerColumnsListener(IRecyclerColumnsListener listener)
+```
+
+- Set the adapter simply by calling
+```java
+mGrid.setRecyclerAdapter(AbstractItemInflater inflater)
+```
+
+- expand the content using the expand method
+```java
+mGrid.showContent();
+```
+
+- collapse the content using the collapse method
+```java
+mGrid.hideContent();
+```
+
+- set a custom ItemDecoration to the grid using
+```java
+mGrid.addItemDecoration(ItemDecoration item_decoration)
+``
+
 # Declare an inflater
 
 To create a new Adapter for the grid, you must instantiate a **MainArrayAdapter** object.
@@ -43,21 +70,28 @@ The instantiation method helper takes an **AbstractItemInflater** interface inst
 
 The interface signature is declared as :
 ```java
-public interface AbstractItemInflater {
+public interface AbstractItemInflater<T extends ColumnItemHolder> {
     /**
      * Called from the array adapter with the ColumnItemHolder to create
      *
      * @param parent the parent view
      * @return an instance of ColumnItemHolder with the proper data default data binded
      */
-    ColumnItemHolder onCreateViewHolder(ViewGroup parent);
+    @NonNull
+    T onCreateViewHolder(@NonNull ViewGroup parent);
 
     /**
      * Set the data for a displayed / managed holder containing an AbstractItem
+     * <p/>
+     * Each holder will provide an **AbstractItem** which contains getPosition()
+     * the getPosition() >= 0 will give a value into the provider's list of real items
+     * it is safe to call a get on the provider's internal list of items from this value
+     * <p/>
+     * for now, returning -1 means that the object was unintialized
      *
      * @param holder the holder to manage
      */
-    void onBindViewHolder(ColumnItemHolder holder);
+    void onBindViewHolder(@NonNull T holder);
 
     /**
      * The number of items
@@ -68,10 +102,14 @@ public interface AbstractItemInflater {
 
     /**
      * Retrieve a specific item at a given position
+     * <p/>
+     * The implementation must create a ContentItem with at least the usage of ths
+     * ContentItem(int position) constructor
      *
      * @param position the position greater or equals than 0
      * @return the corresponding item or null if invalid position
      */
+    @NonNull
     ContentItem getContentItemAt(int position);
 
     /**
@@ -87,6 +125,28 @@ public interface AbstractItemInflater {
      * @param parent a non-null parent
      * @return
      */
-    View getHeader(ViewGroup parent);
+    @NonNull
+    View getHeader(@NonNull ViewGroup parent);
+
+    /**
+     * Set the provider with a specific footer in the column
+     *
+     * @return true if the provider will manage the creation of a footer view
+     */
+    boolean hasFooter();
+
+    /**
+     * Create the header view requested by the ain component
+     *
+     * @param parent a non-null parent
+     * @return
+     */
+    @NonNull
+    View getFooter(@NonNull ViewGroup parent);
 }
 ```
+
+# TODO list
+
+- make the header and footer state (always visible or invisible when the content is visible/invisible)
+- customize the animation
