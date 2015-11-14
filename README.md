@@ -39,7 +39,7 @@ Default value : 1
 # Usage
 
 - register a listener for events
-```java
+```jav
 mGrid.setRecyclerColumnsListener(IRecyclerColumnsListener listener)
 ```
 
@@ -61,7 +61,7 @@ mGrid.hideContent();
 - set a custom ItemDecoration to the grid using
 ```java
 mGrid.addItemDecoration(ItemDecoration item_decoration)
-``
+```
 
 # Declare an inflater
 
