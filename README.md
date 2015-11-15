@@ -53,6 +53,29 @@ mGrid.setRecyclerAdapter(AbstractItemInflater inflater)
 mGrid.showContent();
 ```
 
+or
+
+```java
+mGrid.showContent(int position_from_an_AbstractItem);
+```
+
+Example :
+
+```java
+    @Override
+    public void onBindViewHolder(final ColumnsNewItemHolder holder) {
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this,
+                        "Click on " + holder.getItem().getPosition(),
+                        Toast.LENGTH_SHORT).show();
+
+                _grid.showContent(holder.getItem().getPosition());
+            }
+        });
+    }
+```
 - collapse the content using the collapse method
 ```java
 mGrid.hideContent();

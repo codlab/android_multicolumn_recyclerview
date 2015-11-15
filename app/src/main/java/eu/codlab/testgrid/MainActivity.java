@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity
                         "Click on " + holder.getItem().getPosition(),
                         Toast.LENGTH_SHORT).show();
 
-                _grid.showContent(holder.getRealPosition());
+                _grid.showContent(holder.getItem().getPosition());
             }
         });
     }
