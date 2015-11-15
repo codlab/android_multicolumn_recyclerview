@@ -183,8 +183,8 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
                     changed.add(change);
                     change = null;
                 }
-                index_cursor++;
             }
+            index_cursor++;
         }
 
         if (change != null) changed.add(change);
