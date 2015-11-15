@@ -21,6 +21,6 @@
         android:id="@+id/grid"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:columns="5"
-        app:columnsVisibleExpanded="3"/>
+        app:columns="3"
+        app:columnsVisibleExpanded="1" />
 </LinearLayout>

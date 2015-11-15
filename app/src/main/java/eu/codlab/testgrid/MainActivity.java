@@ -16,7 +16,6 @@ import eu.codlab.recyclercolumnadaptable.IRecyclerColumnsListener;
 import eu.codlab.recyclercolumnadaptable.RecyclerColumnsWithContentView;
 import eu.codlab.recyclercolumnadaptable.inflater.AbstractItemInflater;
 import eu.codlab.recyclercolumnadaptable.item.ContentItem;
-import eu.codlab.recyclercolumnadaptable.view.MainArrayAdapter;
 
 public class MainActivity extends AppCompatActivity
         implements AbstractItemInflater<ColumnsNewItemHolder>,
@@ -28,7 +27,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        for (int i = 0; i < 12; i++) _items.add(new ContentItem(i));
+        for (int i = 0; i < 255; i++) _items.add(new ContentItem(i));
 
         setContentView(R.layout.activity_main);
 
@@ -39,7 +38,7 @@ public class MainActivity extends AppCompatActivity
                 if (_grid.isShowingContent()) {
                     _grid.hideContent();
                 } else {
-                    _grid.showContent();
+                    _grid.showContent(12);
                 }
             }
         });
@@ -63,6 +62,8 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(MainActivity.this,
                         "Click on " + holder.getItem().getPosition(),
                         Toast.LENGTH_SHORT).show();
+
+                _grid.showContent(holder.getRealPosition());
             }
         });
     }
