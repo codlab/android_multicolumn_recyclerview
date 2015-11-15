@@ -17,6 +17,11 @@ public abstract class AbstractItem {
         setPosition(position);
     }
 
+    public AbstractItem updatePosition(int position) {
+        setPosition(position);
+        return this;
+    }
+
     public void setPosition(int position) {
         _position = position;
     }

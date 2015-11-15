@@ -159,17 +159,20 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
         checkResume();
     }
 
-    public void showContent(final int position) {
-        showContent();
-        getHandler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (_recycler != null) _recycler.smoothScrollToPosition(position);
-            }
-        }, DELAY_SET_SCROLL_POSITION);
+    public boolean showContent(final int position) {
+        boolean shown_content = showContent();
+        if (shown_content) {
+            getHandler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (_recycler != null) _recycler.smoothScrollToPosition(position);
+                }
+            }, DELAY_SET_SCROLL_POSITION);
+        }
+        return shown_content;
     }
 
-    public void showContent() {
+    public boolean showContent() {
         if (_recycler.getAdapter() != null && ((MainArrayAdapter) _recycler.getAdapter()).isExpanded()) {
             ((MainArrayAdapter) _recycler.getAdapter())
                     .collapse();
@@ -193,10 +196,12 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
 
             invalidateDecorations();
             if (_listener != null) _listener.onShowContent(_content);
+            return true;
         }
+        return false;
     }
 
-    public void hideContent() {
+    public boolean hideContent() {
         if (_recycler.getAdapter() != null && !((MainArrayAdapter) _recycler.getAdapter()).isExpanded()) {
             ((MainArrayAdapter) _recycler.getAdapter())
                     .expand();
@@ -218,7 +223,9 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
 
             invalidateDecorations();
             if (_listener != null) _listener.onHideContent(_content);
+            return true;
         }
+        return false;
     }
 
     public boolean isShowingContent() {
