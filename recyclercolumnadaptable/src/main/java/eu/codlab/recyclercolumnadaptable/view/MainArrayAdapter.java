@@ -48,7 +48,7 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
         _content = new ArrayList<>();
         if (_provider.hasHeader()) _content.add(new HeaderItem());
         for (int i = 0; i < _provider.getItemCount(); i++) {
-            _content.add(_provider.getContentItemAt(i));
+            _content.add(_provider.getContentItemAt(i).updatePosition(i));
         }
         expand();
     }
@@ -81,7 +81,6 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
 
         if (holder instanceof ColumnItemHolder) {
             ColumnItemHolder current_holder = (ColumnItemHolder) holder;
-            current_holder.setRealPosition(position);
             holder.onBindViewHolder(_content.get(position));
             _provider.onBindViewHolder((ColumnItemHolder) holder);
         }
@@ -115,6 +114,20 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
         return _is_expanded;
     }
 
+    public int transformInArrayToPositionInRecycler(int position) {
+        if (!isExpanded()) {
+            //show content
+            int modulo = position % _column_left; //the modulo will set
+            int number_row = position / _column_left;
+            int row_index = number_row * _column_count;
+            int index_row_column = row_index + modulo;
+            return index_row_column;
+        } else {
+            //unshow content
+            return position;
+        }
+    }
+
     private void setEmptyContent() {
         int column_at_right = _column_count - _column_left;
         boolean has_fetched_item = true;
@@ -122,13 +135,11 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
         ArrayList<Changed> changed = new ArrayList<>();
         List<AbstractItem> items = new ArrayList<>();
 
-        int index_cursor = 0;
         int original_index = 0;
 
         if (_provider.hasHeader() && _content.size() > 0) {
             items.add(_content.get(0));
             original_index++;
-            index_cursor++;
         }
 
         while (has_fetched_item) {
@@ -137,17 +148,15 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
             for (int count = 0, i = original_index
                  ; count < _column_left && i < _content.size()
                     ; count++, i++) {
-                items.add(_content.get(i).updatePosition(index_cursor));
+                items.add(_content.get(i));
                 has_fetched_item = true;
                 original_index++;
-                index_cursor++;
             }
 
             if (has_fetched_item) {
                 int index = items.size();
                 for (int i = 0; i < column_at_right; i++) {
                     items.add(new EmptyItem());
-                    index_cursor++;
                 }
                 changed.add(new Changed(index, column_at_right));
             }
@@ -178,13 +187,12 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
                 _content.remove(index_cursor);
                 change.count++;
             } else {
-                tmp.updatePosition(index_cursor);
                 if (change != null) {
                     changed.add(change);
                     change = null;
                 }
+                index_cursor++;
             }
-            index_cursor++;
         }
 
         if (change != null) changed.add(change);

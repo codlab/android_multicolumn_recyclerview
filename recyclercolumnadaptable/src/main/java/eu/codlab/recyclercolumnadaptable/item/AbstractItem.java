@@ -26,7 +26,7 @@ public abstract class AbstractItem {
         _position = position;
     }
 
-    public long getPosition() {
+    public int getPosition() {
         return _position;
     }
 

@@ -10,6 +10,7 @@ import android.os.Parcelable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
@@ -159,9 +160,13 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
         checkResume();
     }
 
-    public boolean showContent(final int position) {
+    public boolean showContent(final int position_in_item) {
         boolean shown_content = showContent();
         if (shown_content) {
+            final int position = ((MainArrayAdapter) _recycler.getAdapter())
+                    .transformInArrayToPositionInRecycler(position_in_item);
+            Log.d("RecyclerColumnsWithContentView", "real position=" + position_in_item
+                    + " :: computed=" + position + " " + ((MainArrayAdapter) _recycler.getAdapter()).isExpanded());
             getHandler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
