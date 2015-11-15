@@ -80,6 +80,8 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
         }
 
         if (holder instanceof ColumnItemHolder) {
+            ColumnItemHolder current_holder = (ColumnItemHolder) holder;
+            current_holder.setRealPosition(position);
             holder.onBindViewHolder(_content.get(position));
             _provider.onBindViewHolder((ColumnItemHolder) holder);
         }
@@ -120,11 +122,13 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
         ArrayList<Changed> changed = new ArrayList<>();
         List<AbstractItem> items = new ArrayList<>();
 
+        int index_cursor = 0;
         int original_index = 0;
 
         if (_provider.hasHeader() && _content.size() > 0) {
             items.add(_content.get(0));
             original_index++;
+            index_cursor++;
         }
 
         while (has_fetched_item) {
@@ -133,15 +137,18 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
             for (int count = 0, i = original_index
                  ; count < _column_left && i < _content.size()
                     ; count++, i++) {
-                items.add(_content.get(i));
-                original_index++;
+                items.add(_content.get(i).updatePosition(index_cursor));
                 has_fetched_item = true;
+                original_index++;
+                index_cursor++;
             }
 
             if (has_fetched_item) {
                 int index = items.size();
-                for (int i = 0; i < column_at_right; i++)
+                for (int i = 0; i < column_at_right; i++) {
                     items.add(new EmptyItem());
+                    index_cursor++;
+                }
                 changed.add(new Changed(index, column_at_right));
             }
         }
@@ -160,20 +167,23 @@ public class MainArrayAdapter extends RecyclerView.Adapter<AbstractColumnItemHol
     private void unsetEmptyContent() {
         ArrayList<Changed> changed = new ArrayList<>();
 
-        int i = 0;
+        int index_cursor = 0;
         //if (_provider.hasHeader()) i++;
         Changed change = null;
-        while (i < _content.size()) {
-            if (_content.get(i) instanceof EmptyItem) {
-                if (change == null) change = new Changed(i, 0);
-                _content.remove(i);
+        AbstractItem tmp;
+        while (index_cursor < _content.size()) {
+            tmp = _content.get(index_cursor);
+            if (tmp instanceof EmptyItem) {
+                if (change == null) change = new Changed(index_cursor, 0);
+                _content.remove(index_cursor);
                 change.count++;
             } else {
+                tmp.updatePosition(index_cursor);
                 if (change != null) {
                     changed.add(change);
                     change = null;
                 }
-                i++;
+                index_cursor++;
             }
         }
 
