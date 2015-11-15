@@ -22,6 +22,7 @@ import java.util.List;
 import eu.codlab.recyclercolumnadaptable.inflater.AbstractItemInflater;
 import eu.codlab.recyclercolumnadaptable.item.AbstractItem;
 import eu.codlab.recyclercolumnadaptable.item.HeaderItem;
+import eu.codlab.recyclercolumnadaptable.manager.GridLayoutSmoothManager;
 import eu.codlab.recyclercolumnadaptable.view.MainArrayAdapter;
 import jp.wasabeef.recyclerview.animators.LandingAnimator;
 
@@ -29,6 +30,8 @@ import jp.wasabeef.recyclerview.animators.LandingAnimator;
  * Created by kevinleperf on 09/11/2015.
  */
 public class RecyclerColumnsWithContentView extends FrameLayout {
+    private final static long DELAY_INVALIDATE_DECORATIONS = 300;
+    private final static long DELAY_SET_SCROLL_POSITION = 200;
     private final static int MINIMUM_COLUMNS_COUNT = 3;
     private final static int MINIMUM_COLUMNS_WHILE_BEING_EXPANDED_COUNT = 1;
 
@@ -74,7 +77,7 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
         }
 
         //init the recyclerview with the correct amount of columns
-        GridLayoutManager grid_manager = new GridLayoutManager(getContext(), _columns);
+        GridLayoutSmoothManager grid_manager = new GridLayoutSmoothManager(getContext(), _columns);
         grid_manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
@@ -156,8 +159,18 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
         checkResume();
     }
 
+    public void showContent(final int position) {
+        showContent();
+        getHandler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (_recycler != null) _recycler.smoothScrollToPosition(position);
+            }
+        }, DELAY_SET_SCROLL_POSITION);
+    }
+
     public void showContent() {
-        if (_recycler.getAdapter() != null) {
+        if (_recycler.getAdapter() != null && ((MainArrayAdapter) _recycler.getAdapter()).isExpanded()) {
             ((MainArrayAdapter) _recycler.getAdapter())
                     .collapse();
 
@@ -184,7 +197,7 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
     }
 
     public void hideContent() {
-        if (_recycler.getAdapter() != null) {
+        if (_recycler.getAdapter() != null && !((MainArrayAdapter) _recycler.getAdapter()).isExpanded()) {
             ((MainArrayAdapter) _recycler.getAdapter())
                     .expand();
 
@@ -323,7 +336,7 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
                             }
                         }
                     }
-                }, 300);
+                }, DELAY_INVALIDATE_DECORATIONS);
             }
         } catch (Exception e) {
             if (BuildConfig.DEBUG) e.printStackTrace();
