@@ -7,7 +7,7 @@ A simple multi column recyclerview supporting column count modification
 Install the dependency into your project using
 ```gradle
 dependencies {
-  compile 'eu.codlab:android_multicolumn_adaptable:1.6'
+  compile 'eu.codlab:android_multicolumn_adaptable:1.7.2'
 }
 ```
 
