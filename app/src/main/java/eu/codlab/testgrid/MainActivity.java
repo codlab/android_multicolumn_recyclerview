@@ -31,7 +31,6 @@ public class MainActivity extends AppCompatActivity
 
         setContentView(R.layout.activity_main);
 
-
         findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -55,15 +54,17 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onBindViewHolder(final ColumnsNewItemHolder holder) {
+    public void onBindViewHolder(ColumnsNewItemHolder holder) {
+        final int position = holder.getItem().getPosition();
+        holder.example_content.setText(Integer.toString(position));
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Toast.makeText(MainActivity.this,
-                        "Click on " + holder.getItem().getPosition(),
+                        "Click on " + position,
                         Toast.LENGTH_SHORT).show();
 
-                _grid.showContent(holder.getItem().getPosition());
+                _grid.showContent(position);
             }
         });
     }

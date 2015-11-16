@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="@dimen/cell_height"
     android:layout_gravity="center_horizontal|center_vertical"
     android:background="#ff4eee"
     android:gravity="center_horizontal|center_vertical"
     android:orientation="vertical">
 
-    <ImageView
+    <TextView
+        android:id="@+id/test_content"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|center_vertical"
-        android:gravity="center_horizontal|center_vertical"
-        android:src="@mipmap/ic_launcher" />
+        android:text="Content"
+        android:textColor="@android:color/white" />
 </LinearLayout>
