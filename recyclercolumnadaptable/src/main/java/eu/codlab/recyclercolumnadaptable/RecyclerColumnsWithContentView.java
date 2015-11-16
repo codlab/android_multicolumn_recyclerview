@@ -175,27 +175,27 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
     }
 
     public boolean showContent() {
-        if (_recycler.getAdapter() != null && ((MainArrayAdapter) _recycler.getAdapter()).isExpanded()) {
-            ((MainArrayAdapter) _recycler.getAdapter())
-                    .collapse();
+        if (_recycler.getAdapter() != null) {
+            if (((MainArrayAdapter) _recycler.getAdapter()).isExpanded()) {
+                ((MainArrayAdapter) _recycler.getAdapter())
+                        .collapse();
 
-            int footer_new_width = _footer_parent.getWidth() * _columns_left / _columns;
-            ValueAnimator animator = ValueAnimator.ofFloat(_footer_parent.getWidth(), footer_new_width);
-            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    _footer.getLayoutParams().width = ((Float) animation.getAnimatedValue())
-                            .intValue();
-                    _footer.requestLayout();
+                int footer_new_width = _footer_parent.getWidth() * _columns_left / _columns;
+                ValueAnimator animator = ValueAnimator.ofFloat(_footer_parent.getWidth(), footer_new_width);
+                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animation) {
+                        _footer.getLayoutParams().width = ((Float) animation.getAnimatedValue())
+                                .intValue();
+                        _footer.requestLayout();
 
-                    _footer_content.getLayoutParams().width = _footer_parent.getWidth()
-                            - _footer.getLayoutParams().width;
-                    _footer_content.requestLayout();
-                }
-            });
-            animator.start();
-
-
+                        _footer_content.getLayoutParams().width = _footer_parent.getWidth()
+                                - _footer.getLayoutParams().width;
+                        _footer_content.requestLayout();
+                    }
+                });
+                animator.start();
+            }
             invalidateDecorations();
             if (_listener != null) _listener.onShowContent(_content);
             return true;
@@ -204,25 +204,27 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
     }
 
     public boolean hideContent() {
-        if (_recycler.getAdapter() != null && !((MainArrayAdapter) _recycler.getAdapter()).isExpanded()) {
-            ((MainArrayAdapter) _recycler.getAdapter())
-                    .expand();
+        if (_recycler.getAdapter() != null) {
+            if (!((MainArrayAdapter) _recycler.getAdapter()).isExpanded()) {
+                ((MainArrayAdapter) _recycler.getAdapter())
+                        .expand();
 
-            ValueAnimator animator = ValueAnimator.ofFloat(_footer.getWidth(), _footer_parent.getWidth());
-            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    _footer.getLayoutParams().width = ((Float) animation.getAnimatedValue())
-                            .intValue();
-                    _footer.requestLayout();
+                ValueAnimator animator = ValueAnimator.ofFloat(_footer.getWidth(), _footer_parent.getWidth());
+                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animation) {
+                        _footer.getLayoutParams().width = ((Float) animation.getAnimatedValue())
+                                .intValue();
+                        _footer.requestLayout();
 
-                    _footer_content.getLayoutParams().width = _footer_parent.getWidth()
-                            - _footer.getLayoutParams().width;
-                    _footer_content.requestLayout();
-                }
-            });
-            animator.start();
+                        _footer_content.getLayoutParams().width = _footer_parent.getWidth()
+                                - _footer.getLayoutParams().width;
+                        _footer_content.requestLayout();
+                    }
+                });
+                animator.start();
 
+            }
             invalidateDecorations();
             if (_listener != null) _listener.onHideContent(_content);
             return true;
