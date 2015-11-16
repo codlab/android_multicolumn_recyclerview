@@ -5,7 +5,6 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Build;
-import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -23,6 +22,7 @@ import eu.codlab.recyclercolumnadaptable.inflater.AbstractItemInflater;
 import eu.codlab.recyclercolumnadaptable.item.AbstractItem;
 import eu.codlab.recyclercolumnadaptable.item.HeaderItem;
 import eu.codlab.recyclercolumnadaptable.manager.GridLayoutSmoothManager;
+import eu.codlab.recyclercolumnadaptable.states.SavedState;
 import eu.codlab.recyclercolumnadaptable.view.MainArrayAdapter;
 import jp.wasabeef.recyclerview.animators.LandingAnimator;
 
@@ -31,7 +31,7 @@ import jp.wasabeef.recyclerview.animators.LandingAnimator;
  */
 public class RecyclerColumnsWithContentView extends FrameLayout {
     private final static long DELAY_INVALIDATE_DECORATIONS = 300;
-    private final static long DELAY_SET_SCROLL_POSITION = 200;
+    private final static long DELAY_SET_SCROLL_POSITION = 300;
     private final static int MINIMUM_COLUMNS_COUNT = 3;
     private final static int MINIMUM_COLUMNS_WHILE_BEING_EXPANDED_COUNT = 1;
 
@@ -175,8 +175,10 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
     }
 
     public boolean showContent() {
+        boolean changed_state = false;
         if (_recycler.getAdapter() != null) {
             if (((MainArrayAdapter) _recycler.getAdapter()).isExpanded()) {
+                changed_state = true;
                 ((MainArrayAdapter) _recycler.getAdapter())
                         .collapse();
 
@@ -198,14 +200,15 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
             }
             invalidateDecorations();
             if (_listener != null) _listener.onShowContent(_content);
-            return true;
         }
-        return false;
+        return changed_state;
     }
 
     public boolean hideContent() {
+        boolean changed_state = false;
         if (_recycler.getAdapter() != null) {
             if (!((MainArrayAdapter) _recycler.getAdapter()).isExpanded()) {
+                changed_state = true;
                 ((MainArrayAdapter) _recycler.getAdapter())
                         .expand();
 
@@ -223,13 +226,11 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
                     }
                 });
                 animator.start();
-
             }
             invalidateDecorations();
             if (_listener != null) _listener.onHideContent(_content);
-            return true;
         }
-        return false;
+        return changed_state;
     }
 
     public boolean isShowingContent() {
@@ -290,43 +291,6 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
     }
 
     private Boolean temporary_to_store_is_showing_content = null;
-
-    protected static class SavedState extends BaseSavedState {
-
-        private Boolean is_showing_content = null;
-
-        private SavedState(Parcelable superState, boolean is_showing_content) {
-            super(superState);
-            this.is_showing_content = is_showing_content;
-        }
-
-        private SavedState(Parcel in) {
-            super(in);
-            is_showing_content = in.readInt() == 1;
-        }
-
-        public Boolean isShowingContent() {
-            return is_showing_content;
-        }
-
-        @Override
-        public void writeToParcel(Parcel destination, int flags) {
-            super.writeToParcel(destination, flags);
-            destination.writeInt(is_showing_content ? 1 : 0);
-        }
-
-        public static final Parcelable.Creator<SavedState> CREATOR = new Creator<SavedState>() {
-
-            public SavedState createFromParcel(Parcel in) {
-                return new SavedState(in);
-            }
-
-            public SavedState[] newArray(int size) {
-                return new SavedState[size];
-            }
-
-        };
-    }
 
     private void invalidateDecorations() {
         try {
