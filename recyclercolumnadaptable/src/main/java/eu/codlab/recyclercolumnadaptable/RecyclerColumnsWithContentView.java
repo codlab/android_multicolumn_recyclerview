@@ -10,11 +10,11 @@ import android.os.Parcelable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -33,7 +33,7 @@ import jp.wasabeef.recyclerview.animators.LandingAnimator;
 /**
  * Created by kevinleperf on 09/11/2015.
  */
-public class RecyclerColumnsWithContentView extends FrameLayout implements View.OnTouchListener {
+public class RecyclerColumnsWithContentView extends FrameLayout implements View.OnTouchListener, ViewTreeObserver.OnGlobalLayoutListener {
     private final static long DELAY_INVALIDATE_DECORATIONS = 300;
     private final static long DELAY_SET_SCROLL_POSITION = 300;
     private final static int MINIMUM_COLUMNS_COUNT = 3;
@@ -200,20 +200,7 @@ public class RecyclerColumnsWithContentView extends FrameLayout implements View.
                         .collapse();
 
                 int footer_new_width = _footer_parent.getWidth() * _columns_left / _columns;
-                ValueAnimator animator = ValueAnimator.ofFloat(_footer_parent.getWidth(), footer_new_width);
-                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator animation) {
-                        _footer.getLayoutParams().width = ((Float) animation.getAnimatedValue())
-                                .intValue();
-                        _footer.requestLayout();
-
-                        _footer_content.getLayoutParams().width = _footer_parent.getWidth()
-                                - _footer.getLayoutParams().width;
-                        _footer_content.requestLayout();
-                    }
-                });
-                animator.start();
+                updateFooter(_footer_parent.getWidth(), footer_new_width);
             }
             invalidateDecorations();
             if (_listener != null) _listener.onShowContent(_content);
@@ -229,20 +216,7 @@ public class RecyclerColumnsWithContentView extends FrameLayout implements View.
                 ((MainArrayAdapter) _recycler.getAdapter())
                         .expand();
 
-                ValueAnimator animator = ValueAnimator.ofFloat(_footer.getWidth(), _footer_parent.getWidth());
-                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator animation) {
-                        _footer.getLayoutParams().width = ((Float) animation.getAnimatedValue())
-                                .intValue();
-                        _footer.requestLayout();
-
-                        _footer_content.getLayoutParams().width = _footer_parent.getWidth()
-                                - _footer.getLayoutParams().width;
-                        _footer_content.requestLayout();
-                    }
-                });
-                animator.start();
+                updateFooter(_footer.getWidth(), _footer_parent.getWidth());
 
                 updateScrollPositionToSelected();
                 //setSelectedItemIndex(-1);
@@ -306,6 +280,44 @@ public class RecyclerColumnsWithContentView extends FrameLayout implements View.
         }
     }
 
+    private void invalidateFooter() {
+        if (_provider != null && _provider.hasFooter()) {
+            if (((MainArrayAdapter) _recycler.getAdapter()).isExpanded()) {
+                updateFooter(_footer.getWidth(), _footer_parent.getWidth());
+            } else {
+                int footer_new_width = _footer_parent.getWidth() * _columns_left / _columns;
+                updateFooter(_footer_parent.getWidth(), footer_new_width);
+            }
+
+            if (Build.VERSION.SDK_INT >= 16) {
+                getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            }
+        }
+    }
+
+    private void updateFooter(long from, long to) {
+        ValueAnimator animator = ValueAnimator.ofFloat(from, to);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                _footer.getLayoutParams().width = ((Float) animation.getAnimatedValue())
+                        .intValue();
+                _footer.requestLayout();
+
+                _footer_content.getLayoutParams().width = _footer_parent.getWidth()
+                        - _footer.getLayoutParams().width;
+                _footer_content.requestLayout();
+            }
+        });
+        animator.start();
+    }
+
+
+    @Override
+    public void onGlobalLayout() {
+        invalidateFooter();
+    }
+
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      * SAVE / RESTORE INSTANCE
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -324,6 +336,8 @@ public class RecyclerColumnsWithContentView extends FrameLayout implements View.
             setSelectedItemIndex(savedState.getPositionInProvider());
 
             checkResume();
+
+            getViewTreeObserver().addOnGlobalLayoutListener(this);
         }
     }
 
@@ -331,7 +345,6 @@ public class RecyclerColumnsWithContentView extends FrameLayout implements View.
         if (_recycler != null && _recycler.getAdapter() != null && _listener != null) {
             if (temporary_to_store_is_showing_content != null) {
                 if (temporary_to_store_is_showing_content) {
-                    Log.d("Recycler", "" + getSelectedItemIndex());
                     if (getSelectedItemIndex() >= 0) {
                         showContent(getSelectedItemIndex());
                     } else {
@@ -341,6 +354,7 @@ public class RecyclerColumnsWithContentView extends FrameLayout implements View.
                     hideContent();
                 }
             }
+            invalidateFooter();
         }
     }
 
