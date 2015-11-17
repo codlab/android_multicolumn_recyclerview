@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity
                 if (_grid.isShowingContent()) {
                     _grid.hideContent();
                 } else {
-                    _grid.showContent(12);
+                    _grid.showContent();
                 }
             }
         });
