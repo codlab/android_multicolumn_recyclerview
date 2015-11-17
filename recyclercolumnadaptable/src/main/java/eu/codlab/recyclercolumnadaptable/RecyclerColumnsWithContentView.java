@@ -5,11 +5,15 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Build;
+import android.os.Handler;
 import android.os.Parcelable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
@@ -29,7 +33,7 @@ import jp.wasabeef.recyclerview.animators.LandingAnimator;
 /**
  * Created by kevinleperf on 09/11/2015.
  */
-public class RecyclerColumnsWithContentView extends FrameLayout {
+public class RecyclerColumnsWithContentView extends FrameLayout implements View.OnTouchListener {
     private final static long DELAY_INVALIDATE_DECORATIONS = 300;
     private final static long DELAY_SET_SCROLL_POSITION = 300;
     private final static int MINIMUM_COLUMNS_COUNT = 3;
@@ -49,6 +53,8 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
     private LinearLayout _footer_parent;
     private LinearLayout _footer;
     private LinearLayout _footer_content;
+    private int _position_in_provider;
+    private AbstractItemInflater _provider;
 
 
     private void init(AttributeSet attrs) {
@@ -86,6 +92,10 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
         });
         _recycler.setLayoutManager(grid_manager);
         _recycler.setItemAnimator(new LandingAnimator(new OvershootInterpolator(1f)));
+
+
+        _recycler.setOnTouchListener(this);
+        _position_in_provider = -1;
     }
 
     public RecyclerColumnsWithContentView(Context context) {
@@ -145,6 +155,7 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
     }
 
     public void setRecyclerAdapter(AbstractItemInflater provider) {
+        _provider = provider;
         _recycler.setAdapter(MainArrayAdapter.instantiate(provider, this));
         if (provider.hasFooter()) {
             _footer.removeAllViews();
@@ -161,20 +172,26 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
 
     public boolean showContent(final int position_in_item) {
         boolean shown_content = showContent();
+        _position_in_provider = position_in_item;
         if (shown_content) {
-            final int position = ((MainArrayAdapter) _recycler.getAdapter())
-                    .transformInArrayToPositionInRecycler(position_in_item);
-            getHandler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (_recycler != null) _recycler.smoothScrollToPosition(position);
-                }
-            }, DELAY_SET_SCROLL_POSITION);
+            updateScrollPositionToSelected();
+            //_position_to_save = _position_in_provider;
+            setSelectedItemIndex(-1);
         }
         return shown_content;
     }
 
     public boolean showContent() {
+        boolean shown_content = showContentInternally();
+        if (shown_content) {
+            updateScrollPositionToSelected();
+            //_position_to_save = _position_in_provider;
+            setSelectedItemIndex(-1);
+        }
+        return shown_content;
+    }
+
+    private boolean showContentInternally() {
         boolean changed_state = false;
         if (_recycler.getAdapter() != null) {
             if (((MainArrayAdapter) _recycler.getAdapter()).isExpanded()) {
@@ -226,6 +243,9 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
                     }
                 });
                 animator.start();
+
+                updateScrollPositionToSelected();
+                //setSelectedItemIndex(-1);
             }
             invalidateDecorations();
             if (_listener != null) _listener.onHideContent(_content);
@@ -258,13 +278,41 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
                 && _recycler.getAdapter() instanceof MainArrayAdapter;
     }
 
+    private void setSelectedItemIndex(int position_in_provider) {
+        _position_in_provider = position_in_provider;
+    }
+
+    private int getSelectedItemIndex() {
+        return _position_in_provider;
+    }
+
+    private void updateScrollPositionToSelected() {
+        if (getSelectedItemIndex() >= 0
+                && _provider != null
+                && getSelectedItemIndex() < _provider.getItemCount()) {
+            final int position = ((MainArrayAdapter) _recycler.getAdapter())
+                    .transformInArrayToPositionInRecycler(getSelectedItemIndex());
+            Handler handler = getHandler();
+            if (handler != null) {
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (_recycler != null) _recycler.smoothScrollToPosition(position);
+                    }
+                }, DELAY_SET_SCROLL_POSITION);
+            } else {
+                _recycler.scrollToPosition(position);
+            }
+        }
+    }
+
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      * SAVE / RESTORE INSTANCE
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
     @Override
     protected Parcelable onSaveInstanceState() {
         Parcelable superState = super.onSaveInstanceState();
-        return new SavedState(superState, isShowingContent(false));
+        return new SavedState(superState, isShowingContent(false), getSelectedItemIndex());
     }
 
     @Override
@@ -273,6 +321,7 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
             SavedState savedState = (SavedState) state;
             super.onRestoreInstanceState(savedState.getSuperState());
             temporary_to_store_is_showing_content = savedState.isShowingContent();
+            setSelectedItemIndex(savedState.getPositionInProvider());
 
             checkResume();
         }
@@ -282,7 +331,12 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
         if (_recycler != null && _recycler.getAdapter() != null && _listener != null) {
             if (temporary_to_store_is_showing_content != null) {
                 if (temporary_to_store_is_showing_content) {
-                    showContent();
+                    Log.d("Recycler", "" + getSelectedItemIndex());
+                    if (getSelectedItemIndex() >= 0) {
+                        showContent(getSelectedItemIndex());
+                    } else {
+                        showContent();
+                    }
                 } else {
                     hideContent();
                 }
@@ -316,5 +370,11 @@ public class RecyclerColumnsWithContentView extends FrameLayout {
         } catch (Exception e) {
             if (BuildConfig.DEBUG) e.printStackTrace();
         }
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        setSelectedItemIndex(-1);
+        return false;
     }
 }
