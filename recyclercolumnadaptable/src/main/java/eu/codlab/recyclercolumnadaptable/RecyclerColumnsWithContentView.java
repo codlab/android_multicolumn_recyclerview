@@ -8,8 +8,10 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Parcelable;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -34,7 +36,7 @@ import jp.wasabeef.recyclerview.animators.LandingAnimator;
  * Created by kevinleperf on 09/11/2015.
  */
 public class RecyclerColumnsWithContentView extends FrameLayout implements View.OnTouchListener, ViewTreeObserver.OnGlobalLayoutListener {
-    private final static long DELAY_INVALIDATE_DECORATIONS = 300;
+    private final static long DELAY_INVALIDATE_DECORATIONS = 250;
     private final static long DELAY_SET_SCROLL_POSITION = 300;
     private final static int MINIMUM_COLUMNS_COUNT = 3;
     private final static int MINIMUM_COLUMNS_WHILE_BEING_EXPANDED_COUNT = 1;
@@ -79,6 +81,8 @@ public class RecyclerColumnsWithContentView extends FrameLayout implements View.
                         MINIMUM_COLUMNS_WHILE_BEING_EXPANDED_COUNT);
                 _columns = Math.max(_columns, MINIMUM_COLUMNS_COUNT);
                 setColumnsExpandedVisible(Math.max(_columns_left, MINIMUM_COLUMNS_WHILE_BEING_EXPANDED_COUNT));
+
+                array.recycle();
             }
         }
 
@@ -266,18 +270,39 @@ public class RecyclerColumnsWithContentView extends FrameLayout implements View.
                 && getSelectedItemIndex() < _provider.getItemCount()) {
             final int position = ((MainArrayAdapter) _recycler.getAdapter())
                     .transformInArrayToPositionInRecycler(getSelectedItemIndex());
+            View child = _recycler.getChildAt(0);
+
+            if (child == null || !_provider.useAnimation()) {
+                _recycler.scrollToPosition(position);
+                return;
+            }
+
+            final int width = child.getWidth();
+            final int height = child.getHeight();
+
             Handler handler = getHandler();
             if (handler != null) {
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        if (_recycler != null) _recycler.smoothScrollToPosition(position);
+                        smoothScrollToPosition(position, width, height);
                     }
                 }, DELAY_SET_SCROLL_POSITION);
             } else {
                 _recycler.scrollToPosition(position);
             }
         }
+    }
+
+    private void smoothScrollToPosition(int position, int width, int height) {
+        int pos = ((GridLayoutSmoothManager) _recycler.getLayoutManager()).findFirstVisibleItemPosition();
+        int delta = (position - pos) / getColumns();
+        //View firstChild = _recycler.getChildAt(getSelectedItemIndex());
+        Log.d("RecyclerColumnsWithContentView", "delta := " + delta + " " + position + " " + pos + " ");
+        //Log.d("RecyclerColumnsWithContentView", "delta := " + delta + " " + position + " " + pos + " " + (firstChild.getHeight() * delta));
+        if (height > 0) _recycler.smoothScrollBy(0, height * delta);
+
+        //if (_recycler != null) _recycler.smoothScrollToPosition(position);
     }
 
     private void invalidateFooter() {

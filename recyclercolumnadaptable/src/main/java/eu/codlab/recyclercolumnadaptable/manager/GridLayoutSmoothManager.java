@@ -6,6 +6,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.view.View;
 
 /**
  * Created by kevinleperf on 15/11/2015.
@@ -38,6 +39,21 @@ public class GridLayoutSmoothManager extends GridLayoutManager {
         }
 
         @Override
+        public int calculateDyToMakeVisible(View view, int snapPreference) {
+            final RecyclerView.LayoutManager layoutManager = getLayoutManager();
+            if (!layoutManager.canScrollVertically()) {
+                return 0;
+            }
+            final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) view.getLayoutParams();
+            final int top = layoutManager.getDecoratedTop(view) - params.topMargin;
+            final int bottom = layoutManager.getDecoratedBottom(view) + params.bottomMargin;
+            final int viewHeight = bottom - top;
+            final int start = layoutManager.getPaddingTop();
+            final int end = start + viewHeight;
+            return calculateDtToFit(top, bottom, start, end, snapPreference);
+        }
+
+        @Override
         public PointF computeScrollVectorForPosition(int targetPosition) {
             return GridLayoutSmoothManager.this
                     .computeScrollVectorForPosition(targetPosition);
@@ -45,7 +61,7 @@ public class GridLayoutSmoothManager extends GridLayoutManager {
 
         @Override
         protected int getVerticalSnapPreference() {
-            return SNAP_TO_START;
+            return SNAP_TO_ANY;
         }
     }
 }

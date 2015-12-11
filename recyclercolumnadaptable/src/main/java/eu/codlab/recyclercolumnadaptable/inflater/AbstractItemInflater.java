@@ -83,4 +83,11 @@ public interface AbstractItemInflater<T extends ColumnItemHolder> {
      */
     @NonNull
     View getFooter(@NonNull ViewGroup parent);
+
+    /**
+     * Indicate wether we are using animation during expansion
+     *
+     * @return
+     */
+    boolean useAnimation();
 }
