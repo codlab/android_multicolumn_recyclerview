@@ -7,7 +7,7 @@ A simple multi column recyclerview supporting column count modification
 Install the dependency into your project using
 ```gradle
 dependencies {
-  compile 'eu.codlab:android_multicolumn_adaptable:1.7.2'
+  compile 'eu.codlab:android_multicolumn_adaptable:1.8'
 }
 ```
 
@@ -39,7 +39,7 @@ Default value : 1
 # Usage
 
 - register a listener for events
-```jav
+```java
 mGrid.setRecyclerColumnsListener(IRecyclerColumnsListener listener)
 ```
 
